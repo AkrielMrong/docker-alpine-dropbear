@@ -1,12 +1,16 @@
-FROM alpine:3.5
-
-RUN apk add --no-cache dropbear supervisor
-
-COPY files/supervisor/supervisord.conf /etc/supervisord.conf
-COPY files/supervisor/dropbear.ini /etc/supervisor.d/dropbear.ini
-COPY files/ssh/authorized_keys /root/.ssh/authorized_keys
-
-RUN mkdir -p /etc/dropbear
-RUN chmod -R 0700 /root/.ssh
-
-CMD /usr/bin/supervisord -c /etc/supervisord.conf
+version: '3.8'
+services:
+  webapp:
+    build: .
+    ports:
+      - "1337:1337"  # Back4Apps standard port
+    environment:
+      - PORT=1337
+      - PARSE_MOUNT=/parse
+      - APP_ID=${APP_ID}
+      - MASTER_KEY=${MASTER_KEY}
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:1337/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
